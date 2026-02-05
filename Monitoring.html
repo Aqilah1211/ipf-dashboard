@@ -124,11 +124,11 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <label class="text-xs font-semibold text-slate-600">Dari Tanggal</label>
-                        <input type="date" id="dateFrom" class="w-full px-3 py-2 border border-blue-100 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                        <input type="text" id="dateFrom" placeholder="DD/MM/YYYY" class="w-full px-3 py-2 border border-blue-100 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
                     </div>
                     <div>
                         <label class="text-xs font-semibold text-slate-600">Sampai Tanggal</label>
-                        <input type="date" id="dateTo" class="w-full px-3 py-2 border border-blue-100 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                        <input type="text" id="dateTo" placeholder="DD/MM/YYYY" class="w-full px-3 py-2 border border-blue-100 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
                     </div>
                     <div class="flex items-end gap-2">
                         <button onclick="filterInstalledByDate()" class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition">Filter</button>
@@ -456,20 +456,31 @@
         }
 
         function filterInstalledByDate() {
-            const dateFromInput = document.getElementById('dateFrom').value;
-            const dateToInput = document.getElementById('dateTo').value;
+            const dateFromInput = document.getElementById('dateFrom').value.trim();
+            const dateToInput = document.getElementById('dateTo').value.trim();
 
+            // Validasi format DD/MM/YYYY
+            const dateFormat = /^\d{2}\/\d{2}\/\d{4}$/;
             if (!dateFromInput || !dateToInput) {
-                alert('Silakan pilih tanggal dari dan tanggal sampai');
+                alert('Silakan masukkan tanggal dari dan tanggal sampai');
+                return;
+            }
+            
+            if (!dateFormat.test(dateFromInput) || !dateFormat.test(dateToInput)) {
+                alert('Format tanggal harus DD/MM/YYYY\nContoh: 05/02/2026');
                 return;
             }
 
-            const dateFrom = new Date(dateFromInput + 'T00:00:00');
-            const dateTo = new Date(dateToInput + 'T23:59:59');
+            // Parse DD/MM/YYYY ke Date object
+            const [dayFrom, monthFrom, yearFrom] = dateFromInput.split('/').map(Number);
+            const [dayTo, monthTo, yearTo] = dateToInput.split('/').map(Number);
+            
+            const dateFrom = new Date(yearFrom, monthFrom - 1, dayFrom, 0, 0, 0);
+            const dateTo = new Date(yearTo, monthTo - 1, dayTo, 23, 59, 59);
             
             console.log('🔍 Filter Debug:');
-            console.log('  dateFrom:', dateFromInput, '→', dateFrom);
-            console.log('  dateTo:', dateToInput, '→', dateTo);
+            console.log('  dateFromInput:', dateFromInput, '→', dateFrom);
+            console.log('  dateToInput:', dateToInput, '→', dateTo);
             console.log('  Total installedData:', installedData.length);
 
             const filtered = installedData.filter((row, idx) => {
