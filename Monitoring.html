@@ -31,7 +31,7 @@
                 </div>
                 <div>
                     <h1 class="text-lg font-bold">IFP Dashboard</h1>
-                    <p class="text-[9px] uppercase tracking-widest opacity-80">Live Monitoring Report By spreadsheets</p>
+                    <p class="text-[9px] uppercase tracking-widest opacity-80">Live Monitoring Report</p>
                 </div>
             </div>
             <div class="flex items-center gap-2">
@@ -70,8 +70,14 @@
             </div>
         </div>
 
+        <!-- Tab Navigation -->
+        <div class="flex gap-2 mb-6 border-b border-slate-200">
+            <button onclick="switchTab('trouble')" id="tab-trouble" class="px-4 py-2 font-semibold text-blue-600 border-b-2 border-blue-600">Daftar Kendala</button>
+            <button onclick="switchTab('installed')" id="tab-installed" class="px-4 py-2 font-semibold text-slate-500 hover:text-slate-700">Sekolah Terpasang</button>
+        </div>
+
         <!-- Tabel Kendala -->
-        <div class="bg-white rounded-3xl shadow-xl shadow-blue-900/5 overflow-hidden border border-blue-50">
+        <div id="trouble-section" class="bg-white rounded-3xl shadow-xl shadow-blue-900/5 overflow-hidden border border-blue-50">
             <div class="p-6 border-b border-slate-100 bg-slate-50/50 flex flex-col md:flex-row justify-between items-center gap-4">
                 <div class="text-center md:text-left">
                     <h3 class="text-xl font-bold text-slate-800">Daftar Kendala (Trouble)</h3>
@@ -106,6 +112,58 @@
                 <p class="text-sm">Tidak ada data kendala yang ditemukan.</p>
             </div>
         </div>
+
+        <!-- Tabel Sekolah Terpasang -->
+        <div id="installed-section" class="hidden bg-white rounded-3xl shadow-xl shadow-blue-900/5 overflow-hidden border border-blue-50">
+            <div class="p-6 border-b border-slate-100 bg-slate-50/50">
+                <div class="mb-4">
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Daftar Sekolah Terpasang</h3>
+                    <p class="text-slate-500 text-xs">Menampilkan semua sekolah dengan status "INSTALASI SELESAI"</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="text-xs font-semibold text-slate-600">Dari Tanggal</label>
+                        <input type="date" id="dateFrom" class="w-full px-3 py-2 border border-blue-100 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="text-xs font-semibold text-slate-600">Sampai Tanggal</label>
+                        <input type="date" id="dateTo" class="w-full px-3 py-2 border border-blue-100 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                    <div class="flex items-end gap-2">
+                        <button onclick="filterInstalledByDate()" class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition">Filter</button>
+                        <button onclick="clearDateFilter()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-sm font-semibold transition">Reset</button>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <input type="text" id="searchInstalledInput" onkeyup="searchInstalledTable()" placeholder="Cari NPSN atau Nama Sekolah..." 
+                           class="w-full px-4 py-2 bg-white border border-blue-100 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none shadow-sm">
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="bg-green-50/50 text-green-900/60 text-[10px] font-bold uppercase tracking-widest border-b border-green-100">
+                            <th class="px-6 py-4">NPSN</th>
+                            <th class="px-6 py-4">Nama Sekolah</th>
+                            <th class="px-6 py-4">Tanggal Instalasi</th>
+                            <th class="px-6 py-4">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="installed-table-body" class="divide-y divide-slate-50">
+                        <!-- Data Masuk Disini -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="installed-loading" class="py-20 flex flex-col items-center justify-center">
+                <div class="loader mb-4"></div>
+                <p class="text-slate-400 text-sm animate-pulse">Memproses data...</p>
+            </div>
+            <div id="installed-no-results" class="hidden py-20 text-center flex-col items-center justify-center text-slate-400">
+                <p class="text-sm">Tidak ada sekolah terpasang dalam periode ini.</p>
+            </div>
+        </div>
     </main>
 
     <script>
@@ -118,7 +176,7 @@
         const API_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${SHEET_NAME}`;
 
         // Auto-refresh settings
-        const AUTO_REFRESH_INTERVAL_MS = 60000; // 60s
+        const AUTO_REFRESH_INTERVAL_MS = 30000; // 30s
         let autoRefreshEnabled = true;
         let _previousTroubles = {};
         let lastHash = '';
@@ -187,6 +245,7 @@
                 let troubleCount = 0;
                 let html = '';
                 const currentTroubles = {};
+                installedData = [];
 
                 // Mulai i=1 untuk skip header (sama format dengan CSV/Sheets getValues)
                 for (let i = 1; i < rows.length; i++) {
@@ -199,9 +258,17 @@
                     const nama = row[8];      // Column I (index 8) = Nama Sekolah
                     const status = (row[20] || "").toLowerCase();  // Column U (index 20) = Status
                     const kendala = row[23] || "";  // Column X (index 23) = Kendala
+                    const tanggal = row[9] || "";  // Column J (index 9) = Tanggal Instalasi
 
                     if (status.includes('instalasi') && status.includes('selesai')) {
                         installed++;
+                        // Tambahkan ke installed data
+                        installedData.push({
+                            npsn: npsn,
+                            nama: nama,
+                            tanggal: tanggal,
+                            status: 'Selesai'
+                        });
                     } else {
                         pending++;
                     }
@@ -264,10 +331,98 @@
             });
         }
 
+        function searchInstalledTable() {
+            const input = document.getElementById('searchInstalledInput').value.toLowerCase();
+            const items = document.querySelectorAll('.installed-search-item');
+            items.forEach(item => {
+                item.style.display = item.innerText.toLowerCase().includes(input) ? '' : 'none';
+            });
+        }
+
+        function switchTab(tab) {
+            // Hide both sections
+            document.getElementById('trouble-section').classList.add('hidden');
+            document.getElementById('installed-section').classList.add('hidden');
+
+            // Remove active style from all tabs
+            document.getElementById('tab-trouble').classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
+            document.getElementById('tab-trouble').classList.add('text-slate-500', 'hover:text-slate-700');
+            document.getElementById('tab-installed').classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
+            document.getElementById('tab-installed').classList.add('text-slate-500', 'hover:text-slate-700');
+
+            if (tab === 'trouble') {
+                document.getElementById('trouble-section').classList.remove('hidden');
+                document.getElementById('tab-trouble').classList.remove('text-slate-500', 'hover:text-slate-700');
+                document.getElementById('tab-trouble').classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
+            } else if (tab === 'installed') {
+                document.getElementById('installed-section').classList.remove('hidden');
+                document.getElementById('tab-installed').classList.remove('text-slate-500', 'hover:text-slate-700');
+                document.getElementById('tab-installed').classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
+                populateInstalledTable(installedData);
+            }
+        }
+
+        let installedData = [];
+
+        function populateInstalledTable(data) {
+            const tbody = document.getElementById('installed-table-body');
+            tbody.innerHTML = '';
+
+            if (!data || data.length === 0) {
+                document.getElementById('installed-no-results').classList.remove('hidden');
+                document.getElementById('installed-loading').classList.add('hidden');
+                return;
+            }
+
+            let html = '';
+            data.forEach(row => {
+                const npsn = row.npsn;
+                const nama = row.nama;
+                const tanggal = row.tanggal;
+                const status = row.status;
+
+                html += `
+                    <tr class="installed-search-item hover:bg-green-50/30 transition-colors">
+                        <td class="px-6 py-4 text-xs font-mono font-bold text-blue-700">${npsn}</td>
+                        <td class="px-6 py-4 text-xs font-semibold text-slate-700">${nama}</td>
+                        <td class="px-6 py-4 text-xs text-slate-600">${tanggal}</td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="px-2 py-1 rounded-md text-[9px] font-bold bg-green-100 text-green-600 uppercase">${status}</span>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+            document.getElementById('installed-no-results').classList.add('hidden');
+            document.getElementById('installed-loading').classList.add('hidden');
+        }
+
+        function filterInstalledByDate() {
+            const dateFrom = new Date(document.getElementById('dateFrom').value);
+            const dateTo = new Date(document.getElementById('dateTo').value);
+
+            if (isNaN(dateFrom) || isNaN(dateTo)) {
+                alert('Silakan pilih tanggal dari dan tanggal sampai');
+                return;
+            }
+
+            const filtered = installedData.filter(row => {
+                const rowDate = new Date(row.tanggal);
+                return rowDate >= dateFrom && rowDate <= dateTo;
+            });
+
+            populateInstalledTable(filtered);
+        }
+
+        function clearDateFilter() {
+            document.getElementById('dateFrom').value = '';
+            document.getElementById('dateTo').value = '';
+            document.getElementById('searchInstalledInput').value = '';
+            populateInstalledTable(installedData);
+        }
+
         window.onload = fetchSheetData;
     </script>
 </body>
 </html>
-
-
-
