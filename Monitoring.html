@@ -74,6 +74,7 @@
         <div class="flex gap-2 mb-6 border-b border-slate-200">
             <button onclick="switchTab('trouble')" id="tab-trouble" class="px-4 py-2 font-semibold text-blue-600 border-b-2 border-blue-600">Daftar Kendala</button>
             <button onclick="switchTab('installed')" id="tab-installed" class="px-4 py-2 font-semibold text-slate-500 hover:text-slate-700">Sekolah Terpasang</button>
+            <button onclick="switchTab('pending')" id="tab-pending" class="px-4 py-2 font-semibold text-slate-500 hover:text-slate-700">Belum Pasang</button>
         </div>
 
         <!-- Tabel Kendala -->
@@ -164,6 +165,44 @@
                 <p class="text-sm">Tidak ada sekolah terpasang dalam periode ini.</p>
             </div>
         </div>
+
+        <!-- Tabel Belum Pasang -->
+        <div id="pending-section" class="hidden bg-white rounded-3xl shadow-xl shadow-blue-900/5 overflow-hidden border border-blue-50">
+            <div class="p-6 border-b border-slate-100 bg-slate-50/50">
+                <div class="mb-4">
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Daftar Sekolah Belum Pasang</h3>
+                    <p class="text-slate-500 text-xs">Menampilkan semua sekolah yang belum selesai instalasi</p>
+                </div>
+                <div class="mt-4">
+                    <input type="text" id="searchPendingInput" onkeyup="searchPendingTable()" placeholder="Cari NPSN atau Nama Sekolah..." 
+                           class="w-full px-4 py-2 bg-white border border-blue-100 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none shadow-sm">
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="bg-amber-50/50 text-amber-900/60 text-[10px] font-bold uppercase tracking-widest border-b border-amber-100">
+                            <th class="px-6 py-4">NPSN</th>
+                            <th class="px-6 py-4">Nama Sekolah</th>
+                            <th class="px-6 py-4">Direktorat</th>
+                            <th class="px-6 py-4">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pending-table-body" class="divide-y divide-slate-50">
+                        <!-- Data Masuk Disini -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="pending-loading" class="py-20 flex flex-col items-center justify-center">
+                <div class="loader mb-4"></div>
+                <p class="text-slate-400 text-sm animate-pulse">Memproses data...</p>
+            </div>
+            <div id="pending-no-results" class="hidden py-20 text-center flex-col items-center justify-center text-slate-400">
+                <p class="text-sm">Tidak ada sekolah yang belum pasang.</p>
+            </div>
+        </div>
     </main>
 
     <script>
@@ -246,6 +285,7 @@
                 let html = '';
                 const currentTroubles = {};
                 installedData = [];
+                pendingData = [];
 
                 // Mulai i=1 untuk skip header (sama format dengan CSV/Sheets getValues)
                 for (let i = 1; i < rows.length; i++) {
@@ -255,10 +295,11 @@
 
                     total++;
                     const npsn = row[3];      // Column D (index 3) = NPSN
-                    const nama = row[8];      // Column I (index 8) = Nama Sekolah
+                    const nama = row[8];      // Column I (index 8) = Nama
+                    const direktorat = row[1] || "";  // Column B (index 1) = Direktorat
                     const status = (row[20] || "").toLowerCase();  // Column U (index 20) = Status
-                    const kendala = row[23] || "";  // Column X (index 23) = Kendala
-                    const tanggal = row[9] || "";  // Column J (index 9) = Tanggal Instalasi
+                    const kendala = row[21] || "";  // Column V (index 21) = Keterangan
+                    const tanggal = row[19] || "";  // Column T (index 19) = Selesai
 
                     if (status.includes('instalasi') && status.includes('selesai')) {
                         installed++;
@@ -271,6 +312,13 @@
                         });
                     } else {
                         pending++;
+                        // Tambahkan ke pending data
+                        pendingData.push({
+                            npsn: npsn,
+                            nama: nama,
+                            direktorat: direktorat,
+                            status: status || 'Belum Pasang'
+                        });
                     }
 
                     // Jika kolom kendala (Idx 7) ada isinya
@@ -340,15 +388,18 @@
         }
 
         function switchTab(tab) {
-            // Hide both sections
+            // Hide all sections
             document.getElementById('trouble-section').classList.add('hidden');
             document.getElementById('installed-section').classList.add('hidden');
+            document.getElementById('pending-section').classList.add('hidden');
 
             // Remove active style from all tabs
             document.getElementById('tab-trouble').classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
             document.getElementById('tab-trouble').classList.add('text-slate-500', 'hover:text-slate-700');
             document.getElementById('tab-installed').classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
             document.getElementById('tab-installed').classList.add('text-slate-500', 'hover:text-slate-700');
+            document.getElementById('tab-pending').classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
+            document.getElementById('tab-pending').classList.add('text-slate-500', 'hover:text-slate-700');
 
             if (tab === 'trouble') {
                 document.getElementById('trouble-section').classList.remove('hidden');
@@ -359,10 +410,16 @@
                 document.getElementById('tab-installed').classList.remove('text-slate-500', 'hover:text-slate-700');
                 document.getElementById('tab-installed').classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
                 populateInstalledTable(installedData);
+            } else if (tab === 'pending') {
+                document.getElementById('pending-section').classList.remove('hidden');
+                document.getElementById('tab-pending').classList.remove('text-slate-500', 'hover:text-slate-700');
+                document.getElementById('tab-pending').classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
+                populatePendingTable(pendingData);
             }
         }
 
         let installedData = [];
+        let pendingData = [];
 
         function populateInstalledTable(data) {
             const tbody = document.getElementById('installed-table-body');
@@ -420,6 +477,48 @@
             document.getElementById('dateTo').value = '';
             document.getElementById('searchInstalledInput').value = '';
             populateInstalledTable(installedData);
+        }
+
+        function populatePendingTable(data) {
+            const tbody = document.getElementById('pending-table-body');
+            tbody.innerHTML = '';
+
+            if (!data || data.length === 0) {
+                document.getElementById('pending-no-results').classList.remove('hidden');
+                document.getElementById('pending-loading').classList.add('hidden');
+                return;
+            }
+
+            let html = '';
+            data.forEach(row => {
+                const npsn = row.npsn;
+                const nama = row.nama;
+                const direktorat = row.direktorat;
+                const status = row.status;
+
+                html += `
+                    <tr class="pending-search-item hover:bg-amber-50/30 transition-colors">
+                        <td class="px-6 py-4 text-xs font-mono font-bold text-blue-700">${npsn}</td>
+                        <td class="px-6 py-4 text-xs font-semibold text-slate-700">${nama}</td>
+                        <td class="px-6 py-4 text-xs text-slate-600">${direktorat}</td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="px-2 py-1 rounded-md text-[9px] font-bold bg-amber-100 text-amber-600 uppercase">${status}</span>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+            document.getElementById('pending-no-results').classList.add('hidden');
+            document.getElementById('pending-loading').classList.add('hidden');
+        }
+
+        function searchPendingTable() {
+            const input = document.getElementById('searchPendingInput').value.toLowerCase();
+            const items = document.querySelectorAll('.pending-search-item');
+            items.forEach(item => {
+                item.style.display = item.innerText.toLowerCase().includes(input) ? '' : 'none';
+            });
         }
 
         window.onload = fetchSheetData;
