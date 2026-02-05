@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IFP Installation Report System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;700&display=swap');
+        body { font-family: 'Lexend', sans-serif; background-color: #f0f9ff; }
+        .blue-gradient { background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%); }
+        /* Minimal, valid fallbacks for the small custom card used alongside Tailwind classes */
+        .stat-card { background-color: #ffffff; padding: 1.25rem; border-radius: 1rem; box-shadow: 0 1px 4px rgba(2,6,23,0.04); border: 1px solid rgba(59,130,246,0.06); transition: transform 200ms ease, box-shadow 200ms ease; }
+        .stat-card:hover { transform: translateY(-4px); box-shadow: 0 6px 18px rgba(59,130,246,0.08); }
+        .recent-change { animation: highlight 2s ease; }
+        @keyframes highlight { 0% { background-color: #fef3c7; } 100% { background-color: transparent; } }
+        .loader { border: 3px solid #f3f3f3; border-radius: 50%; border-top: 3px solid #2563eb; width: 30px; height: 30px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <!-- Header -->
+    <nav class="blue-gradient text-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="bg-white/20 p-2 rounded-xl backdrop-blur-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold">IFP Dashboard</h1>
+                    <p class="text-[9px] uppercase tracking-widest opacity-80">Live Monitoring Report</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="manual-refresh" onclick="fetchSheetData({silent:false})" class="bg-white/10 hover:bg-white/20 p-2 rounded-lg transition-all">
+                <svg id="refresh-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+            </button>
+                <button id="auto-toggle" onclick="toggleAutoRefresh()" title="Toggle auto-refresh" class="bg-white/10 hover:bg-white/20 p-2 rounded-lg transition-all">
+                    <svg id="auto-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-9-9" />
+                    </svg>
+                </button>
+                <div class="text-xs text-white/90 opacity-90 px-2">Last: <span id="last-updated" class="font-mono">-</span></div>
+            </div>
+    </nav>
+
+    <main class="container mx-auto px-6 py-8">
+        <!-- Statistik -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+            <div class="stat-card border-t-4 border-t-blue-600">
+                <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Total Sekolah</p>
+                <h2 id="total-unit" class="text-3xl font-bold text-slate-800 mt-2">0</h2>
+            </div>
+            <div class="stat-card border-t-4 border-t-green-500">
+                <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Terpasang</p>
+                <h2 id="count-installed" class="text-3xl font-bold text-green-600 mt-2">0</h2>
+            </div>
+            <div class="stat-card border-t-4 border-t-amber-400">
+                <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Belum Pasang</p>
+                <h2 id="count-pending" class="text-3xl font-bold text-amber-500 mt-2">0</h2>
+            </div>
+            <div class="stat-card border-t-4 border-t-red-600">
+                <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Trouble</p>
+                <h2 id="count-trouble" class="text-3xl font-bold text-red-600 mt-2">0</h2>
+            </div>
+        </div>
+
+        <!-- Tabel Kendala -->
+        <div class="bg-white rounded-3xl shadow-xl shadow-blue-900/5 overflow-hidden border border-blue-50">
+            <div class="p-6 border-b border-slate-100 bg-slate-50/50 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="text-center md:text-left">
+                    <h3 class="text-xl font-bold text-slate-800">Daftar Kendala (Trouble)</h3>
+                    <p class="text-slate-500 text-xs">Menampilkan sekolah dengan keterangan kendala di spreadsheet</p>
+                </div>
+                <input type="text" id="searchInput" onkeyup="searchTable()" placeholder="Cari NPSN atau Nama Sekolah..." 
+                       class="w-full md:w-72 px-4 py-2 bg-white border border-blue-100 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none shadow-sm">
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="bg-blue-50/50 text-blue-900/60 text-[10px] font-bold uppercase tracking-widest border-b border-blue-100">
+                            <th class="px-6 py-4">NPSN</th>
+                            <th class="px-6 py-4">Nama Sekolah</th>
+                            <th class="px-6 py-4 text-center">Status</th>
+                            <th class="px-6 py-4">Detail Kendala</th>
+                        </tr>
+                    </thead>
+                    <tbody id="trouble-table-body" class="divide-y divide-slate-50">
+                        <!-- Data Masuk Disini -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Loading & Empty State -->
+            <div id="loading-overlay" class="py-20 flex flex-col items-center justify-center">
+                <div class="loader mb-4"></div>
+                <p class="text-slate-400 text-sm animate-pulse">Menghubungkan ke Google Sheets MASTER...</p>
+            </div>
+            <div id="no-results" class="hidden py-20 text-center flex-col items-center justify-center text-slate-400">
+                <p class="text-sm">Tidak ada data kendala yang ditemukan.</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Gunakan link spreadsheet Anda
+        const SPREADSHEET_ID = '1E4UBDg9M0RKTvtJCXUOg4IWQmvl1mdmIqeN9CyRw5qs';
+        const SHEET_NAME = 'MASTER'; 
+        // Menggunakan format tqx=out:csv agar data bisa ditarik tanpa API Key
+        const API_URL = 'https://script.google.com/macros/s/AKfycby-HnH7NBFI9eLWNn2RVssnLr1DotsNicZUp5A_UNgWHQ5-69VyLdwGSyO7ohUtpJPd/exec'
+
+        // Auto-refresh settings
+        const AUTO_REFRESH_INTERVAL_MS = 30000; // 30s
+        let autoRefreshEnabled = true;
+        let _previousTroubles = {};
+        let lastHash = '';
+
+        function toggleAutoRefresh() {
+            autoRefreshEnabled = !autoRefreshEnabled;
+            document.getElementById('auto-icon').style.opacity = autoRefreshEnabled ? '1' : '0.4';
+        }
+
+        // Kick off polling
+        setInterval(() => {
+            if (autoRefreshEnabled) fetchSheetData({silent:true});
+        }, AUTO_REFRESH_INTERVAL_MS);
+
+        async function fetchSheetData(opts = {silent: false}) {
+            const tbody = document.getElementById('trouble-table-body');
+            const loading = document.getElementById('loading-overlay');
+            const noResults = document.getElementById('no-results');
+            const refreshIcon = document.getElementById('refresh-icon');
+            
+            if (!opts.silent) refreshIcon.classList.add('animate-spin');
+            if (!opts.silent) loading.style.display = 'flex';
+            noResults.style.display = 'none';
+            tbody.innerHTML = '';
+
+            try {
+                // Sertakan lastHash jika ada; tambahkan parameter dengan separator yang sesuai
+                const sep = API_URL.includes('?') ? '&' : '?';
+                const fetchUrl = API_URL + (lastHash ? (sep + 'hash=' + encodeURIComponent(lastHash)) : '');
+                const response = await fetch(fetchUrl);
+
+                // Periksa tipe konten — Apps Script akan mengembalikan JSON, tetap fallback ke CSV
+                const contentType = (response.headers.get('content-type') || '').toLowerCase();
+                let rows;
+
+                if (contentType.includes('application/json')) {
+                    const j = await response.json();
+                    // Jika server memberi tahu tidak ada perubahan, hentikan jika polling silent
+                    // Perbarui lastHash jika server mengembalikannya
+                    lastHash = j.hash || lastHash;
+                    if (j.changed === false) {
+                        if (!opts.silent) {
+                            document.getElementById('last-updated').innerText = new Date().toLocaleString();
+                        }
+                        if (opts.silent) return; // nothing to update
+                        rows = j.rows || [];
+                    } else {
+                        rows = j.rows || [];
+                    }
+                } else {
+                    const csvData = await response.text();
+                    // Parsing CSV sederhana (naive) — split lines then split by commas while attempting to respect quotes
+                    rows = csvData.split('\n').map(row => {
+                        if (!row) return [];
+                        return row.split(/,(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)/).map(cell => cell.replace(/"/g, '').trim());
+                    });
+                }
+
+                let total = 0;
+                let installed = 0;
+                let pending = 0;
+                let troubleCount = 0;
+                let html = '';
+                const currentTroubles = {};
+
+                // Mulai i=1 untuk skip header (sama format dengan CSV/Sheets getValues)
+                for (let i = 1; i < rows.length; i++) {
+                    const row = rows[i];
+                    if (!row) continue;
+                    if (!row[2]) continue; // Skip jika NPSN kosong
+
+                    total++;
+                    const npsn = row[2];
+                    const nama = row[3];
+                    const status = (row[6] || "").toLowerCase();
+                    const kendala = row[7] || "";
+
+                    if (status.includes('terpasang') && !status.includes('belum')) {
+                        installed++;
+                    } else {
+                        pending++;
+                    }
+
+                    // Jika kolom kendala (Idx 7) ada isinya
+                    if (kendala.length > 1) {
+                        troubleCount++;
+                        const key = npsn + '::' + kendala;
+                        currentTroubles[key] = { npsn, nama, kendala };
+
+                        // If this trouble is new or changed compared to previous poll, add highlight class
+                        const isNew = !_previousTroubles[key];
+
+                        html += `
+                            <tr class="search-item hover:bg-blue-50/30 transition-colors ${isNew ? 'recent-change' : ''}">
+                                <td class="px-6 py-4 text-xs font-mono font-bold text-blue-700">${npsn}</td>
+                                <td class="px-6 py-4 text-xs font-semibold text-slate-700">${nama}</td>
+                                <td class="px-6 py-4 text-center">
+                                    <span class="px-2 py-1 rounded-md text-[9px] font-bold bg-red-100 text-red-600 uppercase">Trouble</span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="text-[11px] text-red-700 bg-red-50 p-2 rounded-lg border border-red-100">
+                                        ${kendala}
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    }
+                }
+                // Save current troubles for next comparison
+                _previousTroubles = currentTroubles;
+
+                document.getElementById('total-unit').innerText = total;
+                document.getElementById('count-installed').innerText = installed;
+                document.getElementById('count-pending').innerText = pending;
+                document.getElementById('count-trouble').innerText = troubleCount;
+
+                if (html === '') {
+                    noResults.style.display = 'flex';
+                } else {
+                    tbody.innerHTML = html;
+                }
+
+                // Update last-updated timestamp
+                document.getElementById('last-updated').innerText = new Date().toLocaleString();
+
+            } catch (error) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-10 text-center text-red-500 text-xs">Gagal memuat data. Pastikan akses Spreadsheet sudah "Public".</td></tr>`;
+            } finally {
+                if (!opts.silent) loading.style.display = 'none';
+                if (!opts.silent) refreshIcon.classList.remove('animate-spin');
+            }
+        }
+
+        function searchTable() {
+            const input = document.getElementById('searchInput').value.toLowerCase();
+            const items = document.querySelectorAll('.search-item');
+            items.forEach(item => {
+                item.style.display = item.innerText.toLowerCase().includes(input) ? '' : 'none';
+            });
+        }
+
+        window.onload = fetchSheetData;
+    </script>
+</body>
+</html>
