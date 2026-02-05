@@ -124,11 +124,27 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <label class="text-xs font-semibold text-slate-600">Dari Tanggal</label>
-                        <input type="text" id="dateFrom" placeholder="DD/MM/YYYY" class="w-full px-3 py-2 border border-blue-100 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                        <div class="flex gap-2">
+                            <input type="text" id="dateFrom" placeholder="DD/MM/YYYY" class="flex-1 px-3 py-2 border border-blue-100 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                            <button onclick="document.getElementById('dateFromPicker').click()" class="px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-lg transition">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                            </button>
+                            <input type="date" id="dateFromPicker" style="display:none" onchange="convertDateFormat('dateFromPicker', 'dateFrom')">
+                        </div>
                     </div>
                     <div>
                         <label class="text-xs font-semibold text-slate-600">Sampai Tanggal</label>
-                        <input type="text" id="dateTo" placeholder="DD/MM/YYYY" class="w-full px-3 py-2 border border-blue-100 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                        <div class="flex gap-2">
+                            <input type="text" id="dateTo" placeholder="DD/MM/YYYY" class="flex-1 px-3 py-2 border border-blue-100 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                            <button onclick="document.getElementById('dateToPicker').click()" class="px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-lg transition">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                            </button>
+                            <input type="date" id="dateToPicker" style="display:none" onchange="convertDateFormat('dateToPicker', 'dateTo')">
+                        </div>
                     </div>
                     <div class="flex items-end gap-2">
                         <button onclick="filterInstalledByDate()" class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition">Filter</button>
@@ -589,6 +605,17 @@
             items.forEach(item => {
                 item.style.display = item.innerText.toLowerCase().includes(input) ? '' : 'none';
             });
+        }
+
+        // Function untuk convert tanggal dari YYYY-MM-DD ke DD/MM/YYYY
+        function convertDateFormat(datePickerId, textFieldId) {
+            const datePicker = document.getElementById(datePickerId);
+            const textField = document.getElementById(textFieldId);
+            
+            if (datePicker.value) {
+                const [year, month, day] = datePicker.value.split('-');
+                textField.value = `${day}/${month}/${year}`;
+            }
         }
 
         window.onload = fetchSheetData;
