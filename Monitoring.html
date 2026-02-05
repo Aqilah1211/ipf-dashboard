@@ -456,20 +456,64 @@
         }
 
         function filterInstalledByDate() {
-            const dateFrom = new Date(document.getElementById('dateFrom').value);
-            const dateTo = new Date(document.getElementById('dateTo').value);
+            const dateFromInput = document.getElementById('dateFrom').value;
+            const dateToInput = document.getElementById('dateTo').value;
 
-            if (isNaN(dateFrom) || isNaN(dateTo)) {
+            if (!dateFromInput || !dateToInput) {
                 alert('Silakan pilih tanggal dari dan tanggal sampai');
                 return;
             }
 
+            const dateFrom = new Date(dateFromInput + 'T00:00:00');
+            const dateTo = new Date(dateToInput + 'T23:59:59');
+
             const filtered = installedData.filter(row => {
-                const rowDate = new Date(row.tanggal);
+                const rowDate = parseDate(row.tanggal);
+                if (!rowDate) return false;
                 return rowDate >= dateFrom && rowDate <= dateTo;
             });
 
+            if (filtered.length === 0) {
+                alert('Tidak ada data dalam rentang tanggal yang dipilih');
+            }
             populateInstalledTable(filtered);
+        }
+
+        // Function untuk parse tanggal dari berbagai format
+        function parseDate(dateStr) {
+            if (!dateStr || dateStr.trim() === '') return null;
+            
+            // Coba format YYYY-MM-DD
+            if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+                return new Date(dateStr + 'T00:00:00');
+            }
+            
+            // Coba format DD/MM/YYYY atau DD-MM-YYYY
+            const parts = dateStr.split(/[\/\-]/).map(p => p.trim());
+            if (parts.length === 3) {
+                let day, month, year;
+                
+                // Format: DD/MM/YYYY atau DD-MM-YYYY
+                if (parts[0].length <= 2 && parts[1].length <= 2) {
+                    day = parseInt(parts[0]);
+                    month = parseInt(parts[1]);
+                    year = parseInt(parts[2]);
+                }
+                // Format: YYYY/MM/DD
+                else if (parts[0].length === 4) {
+                    year = parseInt(parts[0]);
+                    month = parseInt(parts[1]);
+                    day = parseInt(parts[2]);
+                }
+                
+                if (day && month && year) {
+                    return new Date(year, month - 1, day, 0, 0, 0);
+                }
+            }
+            
+            // Fallback: coba parse dengan JavaScript
+            const d = new Date(dateStr);
+            return isNaN(d.getTime()) ? null : d;
         }
 
         function clearDateFilter() {
