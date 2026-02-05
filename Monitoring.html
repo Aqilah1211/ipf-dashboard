@@ -466,13 +466,20 @@
 
             const dateFrom = new Date(dateFromInput + 'T00:00:00');
             const dateTo = new Date(dateToInput + 'T23:59:59');
+            
+            console.log('🔍 Filter Debug:');
+            console.log('  dateFrom:', dateFromInput, '→', dateFrom);
+            console.log('  dateTo:', dateToInput, '→', dateTo);
+            console.log('  Total installedData:', installedData.length);
 
-            const filtered = installedData.filter(row => {
+            const filtered = installedData.filter((row, idx) => {
                 const rowDate = parseDate(row.tanggal);
-                if (!rowDate) return false;
-                return rowDate >= dateFrom && rowDate <= dateTo;
+                const matches = rowDate && rowDate >= dateFrom && rowDate <= dateTo;
+                if (idx < 3) console.log(`  Row[${idx}]: "${row.tanggal}" → ${rowDate} → ${matches ? '✓' : '✗'}`);
+                return matches;
             });
 
+            console.log('  Filtered results:', filtered.length);
             if (filtered.length === 0) {
                 alert('Tidak ada data dalam rentang tanggal yang dipilih');
             }
@@ -483,6 +490,14 @@
         function parseDate(dateStr) {
             if (!dateStr || dateStr.trim() === '') return null;
             
+            dateStr = dateStr.trim();
+            
+            // Format: YYYY-MM-DD HH:MM:SS (with timestamp)
+            if (/^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}$/.test(dateStr)) {
+                const parts = dateStr.split(' ');
+                return new Date(parts[0] + 'T00:00:00');
+            }
+            
             // Coba format YYYY-MM-DD
             if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
                 return new Date(dateStr + 'T00:00:00');
@@ -490,7 +505,7 @@
             
             // Coba format DD/MM/YYYY atau DD-MM-YYYY
             const parts = dateStr.split(/[\/\-]/).map(p => p.trim());
-            if (parts.length === 3) {
+            if (parts.length >= 3) {
                 let day, month, year;
                 
                 // Format: DD/MM/YYYY atau DD-MM-YYYY
@@ -506,7 +521,7 @@
                     day = parseInt(parts[2]);
                 }
                 
-                if (day && month && year) {
+                if (day && month && year && month >= 1 && month <= 12 && day >= 1 && day <= 31) {
                     return new Date(year, month - 1, day, 0, 0, 0);
                 }
             }
