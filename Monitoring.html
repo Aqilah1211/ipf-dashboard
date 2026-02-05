@@ -111,9 +111,9 @@
     <script>
         // Gunakan link spreadsheet Anda
         const SPREADSHEET_ID = '1E4UBDg9M0RKTvtJCXUOg4IWQmvl1mdmIqeN9CyRw5qs';
-        const SHEET_NAME = 'MASTER'; 
-        // Menggunakan format tqx=out:csv agar data bisa ditarik tanpa API Key
-        const API_URL = 'https://script.google.com/macros/s/AKfycby-HnH7NBFI9eLWNn2RVssnLr1DotsNicZUp5A_UNgWHQ5-69VyLdwGSyO7ohUtpJPd/exec'
+        const SHEET_NAME = 'IFP PENDING'; 
+        // Direct ke Google Sheets CSV endpoint (no CORS blocking)
+        const API_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${SHEET_NAME}`;
 
         // Auto-refresh settings
         const AUTO_REFRESH_INTERVAL_MS = 30000; // 30s
@@ -148,7 +148,7 @@
                 const fetchUrl = API_URL + (lastHash ? (sep + 'hash=' + encodeURIComponent(lastHash)) : '');
                 const response = await fetch(fetchUrl);
 
-                // Periksa tipe konten — Apps Script akan mengembalikan JSON, tetap fallback ke CSV
+                // Periksa tipe konten — bisa JSON atau CSV
                 const contentType = (response.headers.get('content-type') || '').toLowerCase();
                 let rows;
 
@@ -167,11 +167,15 @@
                         rows = j.rows || [];
                     }
                 } else {
+                    // Google Sheets CSV response
                     const csvData = await response.text();
                     // Parsing CSV sederhana (naive) — split lines then split by commas while attempting to respect quotes
                     rows = csvData.split('\n').map(row => {
-                        if (!row) return [];
-                        return row.split(/,(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)/).map(cell => cell.replace(/"/g, '').trim());
+                        if (!row || row.trim() === '') return [];
+                        return row.split(/,(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)/).map(cell => {
+                            // Remove quotes and trim
+                            return cell.replace(/^"|"$/g, '').trim();
+                        });
                     });
                 }
 
@@ -186,15 +190,15 @@
                 for (let i = 1; i < rows.length; i++) {
                     const row = rows[i];
                     if (!row) continue;
-                    if (!row[2]) continue; // Skip jika NPSN kosong
+                    if (!row[3]) continue; // Skip jika NPSN (col D, idx 3) kosong
 
                     total++;
-                    const npsn = row[2];
-                    const nama = row[3];
-                    const status = (row[6] || "").toLowerCase();
-                    const kendala = row[7] || "";
+                    const npsn = row[3];      // Column D (index 3) = NPSN
+                    const nama = row[8];      // Column I (index 8) = Nama Sekolah
+                    const status = (row[17] || "").toLowerCase();  // Column R (index 17) = Status
+                    const kendala = row[18] || "";  // Column S (index 18) = Kendala
 
-                    if (status.includes('terpasang') && !status.includes('belum')) {
+                    if (status.includes('instalasi') && status.includes('selesai')) {
                         installed++;
                     } else {
                         pending++;
