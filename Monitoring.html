@@ -111,8 +111,8 @@
     <script>
         // Ambil dari URL parameter atau gunakan default
         const urlParams = new URLSearchParams(window.location.search);
-        const SPREADSHEET_ID = urlParams.get('spreadsheet') || '1E4UBDg9M0RKTvtJCXUOg4IWQmvl1mdmIqeN9CyRw5qs';
-        const SHEET_NAME = urlParams.get('sheet') || 'IFP PENDING'; 
+        const SPREADSHEET_ID = urlParams.get('spreadsheet') || '1UuY3tN0jYFn7FOm_6nuyMza4dXH6uYfwG7Bff7TkOJY';
+        const SHEET_NAME = urlParams.get('sheet') || '5'; 
         
         // Direct ke Google Sheets CSV endpoint (no CORS blocking)
         const API_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${SHEET_NAME}`;
@@ -197,8 +197,8 @@
                     total++;
                     const npsn = row[3];      // Column D (index 3) = NPSN
                     const nama = row[8];      // Column I (index 8) = Nama Sekolah
-                    const status = (row[17] || "").toLowerCase();  // Column R (index 17) = Status
-                    const kendala = row[18] || "";  // Column S (index 18) = Kendala
+                    const status = (row[20] || "").toLowerCase();  // Column U (index 20) = Status
+                    const kendala = row[23] || "";  // Column X (index 23) = Kendala
 
                     if (status.includes('instalasi') && status.includes('selesai')) {
                         installed++;
