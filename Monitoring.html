@@ -118,7 +118,7 @@
         const API_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${SHEET_NAME}`;
 
         // Auto-refresh settings
-        const AUTO_REFRESH_INTERVAL_MS = 30000; // 30s
+        const AUTO_REFRESH_INTERVAL_MS = 60000; // 60s
         let autoRefreshEnabled = true;
         let _previousTroubles = {};
         let lastHash = '';
@@ -268,5 +268,6 @@
     </script>
 </body>
 </html>
+
 
 
