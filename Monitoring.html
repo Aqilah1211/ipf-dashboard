@@ -92,6 +92,7 @@
                 <table class="w-full text-left">
                     <thead>
                         <tr class="bg-blue-50/50 text-blue-900/60 text-[10px] font-bold uppercase tracking-widest border-b border-blue-100">
+                            <th class="px-6 py-4 w-12 text-center">No.</th>
                             <th class="px-6 py-4">NPSN</th>
                             <th class="px-6 py-4">Nama Sekolah</th>
                             <th class="px-6 py-4 text-center">Status</th>
@@ -123,27 +124,27 @@
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                        <label class="text-xs font-semibold text-slate-600">Dari Tanggal</label>
-                        <div class="flex gap-2">
-                            <input type="text" id="dateFrom" placeholder="DD/MM/YYYY" class="flex-1 px-3 py-2 border border-blue-100 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                            <button onclick="document.getElementById('dateFromPicker').click()" class="px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-lg transition">
+                        <label class="text-xs font-semibold text-slate-600 block mb-1">Dari Tanggal</label>
+                        <div class="flex gap-2 relative">
+                            <input type="text" id="dateFrom" placeholder="DD/MM/YYYY" class="flex-1 px-3 py-2 border border-blue-100 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                            <input type="date" id="dateFromPicker" onchange="handleDateChange('dateFromPicker', 'dateFrom')" style="position:absolute;right:0;top:0;opacity:0;width:40px;height:40px;cursor:pointer;z-index:10;">
+                            <div class="px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-lg cursor-pointer transition flex items-center justify-center pointer-events-none" title="Pilih Tanggal">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
-                            </button>
-                            <input type="date" id="dateFromPicker" style="display:none" onchange="convertDateFormat('dateFromPicker', 'dateFrom')">
+                            </div>
                         </div>
                     </div>
                     <div>
-                        <label class="text-xs font-semibold text-slate-600">Sampai Tanggal</label>
-                        <div class="flex gap-2">
-                            <input type="text" id="dateTo" placeholder="DD/MM/YYYY" class="flex-1 px-3 py-2 border border-blue-100 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                            <button onclick="document.getElementById('dateToPicker').click()" class="px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-lg transition">
+                        <label class="text-xs font-semibold text-slate-600 block mb-1">Sampai Tanggal</label>
+                        <div class="flex gap-2 relative">
+                            <input type="text" id="dateTo" placeholder="DD/MM/YYYY" class="flex-1 px-3 py-2 border border-blue-100 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                            <input type="date" id="dateToPicker" onchange="handleDateChange('dateToPicker', 'dateTo')" style="position:absolute;right:0;top:0;opacity:0;width:40px;height:40px;cursor:pointer;z-index:10;">
+                            <div class="px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-lg cursor-pointer transition flex items-center justify-center pointer-events-none" title="Pilih Tanggal">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
-                            </button>
-                            <input type="date" id="dateToPicker" style="display:none" onchange="convertDateFormat('dateToPicker', 'dateTo')">
+                            </div>
                         </div>
                     </div>
                     <div class="flex items-end gap-2">
@@ -161,6 +162,7 @@
                 <table class="w-full text-left">
                     <thead>
                         <tr class="bg-green-50/50 text-green-900/60 text-[10px] font-bold uppercase tracking-widest border-b border-green-100">
+                            <th class="px-6 py-4 w-12 text-center">No.</th>
                             <th class="px-6 py-4">NPSN</th>
                             <th class="px-6 py-4">Nama Sekolah</th>
                             <th class="px-6 py-4">Tanggal Instalasi</th>
@@ -199,6 +201,7 @@
                 <table class="w-full text-left">
                     <thead>
                         <tr class="bg-amber-50/50 text-amber-900/60 text-[10px] font-bold uppercase tracking-widest border-b border-amber-100">
+                            <th class="px-6 py-4 w-12 text-center">No.</th>
                             <th class="px-6 py-4">NPSN</th>
                             <th class="px-6 py-4">Nama Sekolah</th>
                             <th class="px-6 py-4">Direktorat</th>
@@ -348,6 +351,7 @@
 
                         html += `
                             <tr class="search-item hover:bg-blue-50/30 transition-colors ${isNew ? 'recent-change' : ''}">
+                                <td class="px-6 py-4 text-xs font-mono font-bold text-center text-slate-500">${troubleCount}</td>
                                 <td class="px-6 py-4 text-xs font-mono font-bold text-blue-700">${npsn}</td>
                                 <td class="px-6 py-4 text-xs font-semibold text-slate-700">${nama}</td>
                                 <td class="px-6 py-4 text-center">
@@ -447,15 +451,29 @@
                 return;
             }
 
+            // Sort data by tanggal (oldest first / terlama dulu)
+            const sortedData = [...data].sort((a, b) => {
+                const dateA = parseDate(a.tanggal);
+                const dateB = parseDate(b.tanggal);
+                
+                // Jika kedua tanggal kosong atau invalid, pertahankan urutan
+                if (!dateA || !dateB) return 0;
+                
+                // Sort ascending: terlama ke terbaru
+                return dateA - dateB;
+            });
+
             let html = '';
-            data.forEach(row => {
+            sortedData.forEach((row, index) => {
                 const npsn = row.npsn;
                 const nama = row.nama;
                 const tanggal = row.tanggal;
                 const status = row.status;
+                const no = index + 1; // Nomor urut mulai dari 1
 
                 html += `
                     <tr class="installed-search-item hover:bg-green-50/30 transition-colors">
+                        <td class="px-6 py-4 text-xs font-mono font-bold text-center text-slate-500">${no}</td>
                         <td class="px-6 py-4 text-xs font-mono font-bold text-blue-700">${npsn}</td>
                         <td class="px-6 py-4 text-xs font-semibold text-slate-700">${nama}</td>
                         <td class="px-6 py-4 text-xs text-slate-600">${tanggal}</td>
@@ -475,42 +493,63 @@
             const dateFromInput = document.getElementById('dateFrom').value.trim();
             const dateToInput = document.getElementById('dateTo').value.trim();
 
-            // Validasi format DD/MM/YYYY
-            const dateFormat = /^\d{2}\/\d{2}\/\d{4}$/;
+            console.log('🔍 Filter Started:');
+            console.log('  dateFrom:', dateFromInput);
+            console.log('  dateTo:', dateToInput);
+
+            // Validasi tidak boleh kosong
             if (!dateFromInput || !dateToInput) {
-                alert('Silakan masukkan tanggal dari dan tanggal sampai');
+                alert('❌ Silakan masukkan tanggal dari dan tanggal sampai');
                 return;
             }
-            
+
+            // Validasi format DD/MM/YYYY
+            const dateFormat = /^\d{2}\/\d{2}\/\d{4}$/;
             if (!dateFormat.test(dateFromInput) || !dateFormat.test(dateToInput)) {
-                alert('Format tanggal harus DD/MM/YYYY\nContoh: 05/02/2026');
+                alert('❌ Format tanggal harus DD/MM/YYYY\nContoh: 05/02/2026');
                 return;
             }
 
             // Parse DD/MM/YYYY ke Date object
             const [dayFrom, monthFrom, yearFrom] = dateFromInput.split('/').map(Number);
             const [dayTo, monthTo, yearTo] = dateToInput.split('/').map(Number);
+
+            // Validasi range tanggal
+            if (monthFrom < 1 || monthFrom > 12 || dayFrom < 1 || dayFrom > 31) {
+                alert('❌ Tanggal "Dari" tidak valid');
+                return;
+            }
+            if (monthTo < 1 || monthTo > 12 || dayTo < 1 || dayTo > 31) {
+                alert('❌ Tanggal "Sampai" tidak valid');
+                return;
+            }
             
             const dateFrom = new Date(yearFrom, monthFrom - 1, dayFrom, 0, 0, 0);
             const dateTo = new Date(yearTo, monthTo - 1, dayTo, 23, 59, 59);
-            
-            console.log('🔍 Filter Debug:');
-            console.log('  dateFromInput:', dateFromInput, '→', dateFrom);
-            console.log('  dateToInput:', dateToInput, '→', dateTo);
+
+            console.log('  Parsed dateFrom:', dateFrom);
+            console.log('  Parsed dateTo:', dateTo);
             console.log('  Total installedData:', installedData.length);
 
+            // Filter data berdasarkan tanggal
             const filtered = installedData.filter((row, idx) => {
                 const rowDate = parseDate(row.tanggal);
                 const matches = rowDate && rowDate >= dateFrom && rowDate <= dateTo;
-                if (idx < 3) console.log(`  Row[${idx}]: "${row.tanggal}" → ${rowDate} → ${matches ? '✓' : '✗'}`);
+                
+                if (idx < 3) {
+                    console.log(`  Row[${idx}]: "${row.tanggal}" → ${rowDate?.toLocaleDateString()} → matches: ${matches ? '✓' : '✗'}`);
+                }
                 return matches;
             });
 
-            console.log('  Filtered results:', filtered.length);
+            console.log('  ✅ Filtered results:', filtered.length);
+            
             if (filtered.length === 0) {
-                alert('Tidak ada data dalam rentang tanggal yang dipilih');
+                alert('⚠️ Tidak ada data dalam rentang tanggal yang dipilih');
+                populateInstalledTable([]);
+            } else {
+                populateInstalledTable(filtered);
             }
-            populateInstalledTable(filtered);
         }
 
         // Function untuk parse tanggal dari berbagai format
@@ -576,14 +615,16 @@
             }
 
             let html = '';
-            data.forEach(row => {
+            data.forEach((row, index) => {
                 const npsn = row.npsn;
                 const nama = row.nama;
                 const direktorat = row.direktorat;
                 const status = row.status;
+                const no = index + 1; // Nomor urut mulai dari 1
 
                 html += `
                     <tr class="pending-search-item hover:bg-amber-50/30 transition-colors">
+                        <td class="px-6 py-4 text-xs font-mono font-bold text-center text-slate-500">${no}</td>
                         <td class="px-6 py-4 text-xs font-mono font-bold text-blue-700">${npsn}</td>
                         <td class="px-6 py-4 text-xs font-semibold text-slate-700">${nama}</td>
                         <td class="px-6 py-4 text-xs text-slate-600">${direktorat}</td>
@@ -607,18 +648,29 @@
             });
         }
 
-        // Function untuk convert tanggal dari YYYY-MM-DD ke DD/MM/YYYY
-        function convertDateFormat(datePickerId, textFieldId) {
+        // Function untuk handle perubahan date picker
+        function handleDateChange(datePickerId, textFieldId) {
             const datePicker = document.getElementById(datePickerId);
             const textField = document.getElementById(textFieldId);
             
             if (datePicker.value) {
                 const [year, month, day] = datePicker.value.split('-');
                 textField.value = `${day}/${month}/${year}`;
+                console.log(`✅ Date selected: ${day}/${month}/${year}`);
             }
         }
 
-        window.onload = fetchSheetData;
+        // Backup: Initialize date pickers on page load
+        window.onload = function() {
+            // Set date pickers to today's date as default
+            const today = new Date();
+            const dateStr = today.toISOString().split('T')[0];
+            document.getElementById('dateFromPicker').value = dateStr;
+            document.getElementById('dateToPicker').value = dateStr;
+            
+            // Fetch data
+            fetchSheetData();
+        };
     </script>
 </body>
 </html>
